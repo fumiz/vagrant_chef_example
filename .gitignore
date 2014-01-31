@@ -1,0 +1,13 @@
+# ruby
+Gemfile.lock
+
+# Vagrant
+.vagrant
+
+# chef-repo
+/cookbooks/
+Berksfile.lock
+
+# vagrant-local
+/local/*
+!/local/.gitkeep
