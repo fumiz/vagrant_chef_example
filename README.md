@@ -190,44 +190,40 @@ include_recipe 'nginx::config'
 レシピの属性
 ---------------
 
-`nginx/attributes/config.rb`には、`nginx::config`レシピで使用する属性のデフォルトåは、`yum-epel`クックブックに依ånginx']['port'] = 80
-```
-
-この属性は、`node`、`role`や`environment`など`chef-repo`の様々な場所で指定することができ、その優先順位は[厳密に決まっています](http://docs.opscode.com/essentials_cookbook_attribute_³出す目的で使用しています。
+`nginx/attributes/config.rb`には、`nginx::config`レシピで使用する属性のデフォルト値が記述されています。
 
 ```
-include_recipe 'nginx::package'
-include_recipe 'nginx::config'
+default['nginx']['port'] = 80
 ```
 
-ただし、これは若干無理やりな使い方で、これくらいの分量と内容なら全て`default.rb`にまとめてしまえば良いでしょう。
+この属性は、`node`、`role`や`environment`など`chef-repo`の様々な場所で指定することができ、その優先順位は[厳密に決まっています](http://docs.opscode.com/essentials_cookbook_attribute_files.html#attribute-precedence)。
 
-レシピの属性
-----------ぁ、これは若干無理やりな使い方で、これくらいの分量と内容なら全て`default.rb`にまとめã¬シピで使用する属性のデフォルトåは、`yum-epel`クックブックに依ånginx']['port'] = 80
-```
+`default`はデフォルト属性を格納するhashですが、クックブックの適用時には、様々な場所で指定された属性とあわせて`node`hashに格納されます。
+そのため、レシピの中で参照する時には`node`hashを使用します。
 
-この属性は、`node`、`role`や`environment`など`chef-repo`の様々な場所で指定することができ、その倓の属性は、`node`、`role`や`environment`など`chef-repo`の様々な場所で指定することができ、そのæe.com/essentials_cookbook_attribute_³出す目的で使用しています。
-
-```
-include_recipe 'nginx::package'
-include_recipe 'nginx::config'
-```
-
-ただし、これは若干無琨ã¦います。
+この値は、普通に`nginx/recipes/*.rb`といったレシピの中だけでなく、`nginx/templates/default/*.erb`といったテンプレートの中でも使用できます。
 
 ```
-include_recipe 'nginx::package'
-includokりな使い方で、これくらいの分量と内容なら全て`default.rb`にまとめてしまえば良いでしょã¨て`default.rb`にまとめてしまえば良いでしょ¤ã
+  listen       <%= node['nginx']['port'] %> default_server;
 
-レシピの属性
-----------ぁ、これは若干無RB§のデフォルトåは、`yum-epel`クックブックに依ånginx']['port'] = 80
 ```
 
-この属性は、`node`、`role`や`environment`など`chef-repo`の様々な場所で指宀¾ånginx']['port'] = 80
-```
+テンプレート
+---------------
 
-この属性は、`node`、`r
- e`や`environment`など`chef-repo`の様々な場所で指å`
+多くの場合において、サーバを設定する時には固定値の設定ファイルを配置するだけでなくサーバの種類や条件などによって異なった設定値を持った設定ファイルを配置したくなるものです。
+chefにビルトインされたtemplateリソースを使うことでこのような目的を簡単に実現することができます。
+
+http://docs.opscode.com/essentials_cookbook_templates.html
+
+templateリソースは、cookbook_fileリソースと似ていますが、ファイルを配置するのは`templates`ディレクトリの中です。
+このファイルはtemplateリソースに記述された属性に従い[ERB(Embedded Ruby)](http://ja.wikipedia.org/wiki/ERuby)で値を埋め込むことができます。
+埋め込む値はtemplateリソースの属性に指定することもできますし、`node`hashの値を埋め込むこともできます。
+
+```
+  listen       <%= node['nginx']['port'] %> default_server;
+
+```
 
 通知
 ---------------
@@ -235,48 +231,42 @@ includokりな使い方で、これくらいの分量と内容なら全て`d
 http://docs.opscode.com/resource_common.html#notifications
 
 nginxは、設定ファイルを書き換えた時に設定ファイルを再読み込みする必要があります。
-このように○○した時に☓☓するといった目的に使用するのが通知(notifications)で'nginx::package'
-includokりな使い方で、これくらいの分量と内容なら全て`default.rb`にまとめてしªã¾えば良いでしょã¨て`default.rb`にまとめてしまえば良いでしょ¤ã
+このように○○した時に☓☓するといった目的に使用するのが通知(notifications)です。
 
-レシピの属性
---------' まえば良いでしょ¤ã
+例えば、次のコードは、templateリソースが適用された場合に`nginx`という名前の`serviceリソース`に対して`:reload`アクションを実行するように通知を送ります。
 
-レシピの属性
--------
- m-epel`クックブックに依ånginx']['port'] = 80
+```
+template 'default.conf' do
+  action :create
+  path '/etc/nginx/conf.d/default.conf'
+  source 'default.conf.erb'
+  owner 'root'
+  group 'root'
+  mode 0644
+  notifies :reload,'service[nginx]'
+end
 ```
 
-この属性は、`node`、`role`や`environment`など`chefteepo`の様々な場所で指å`
+templateリソースは、レシピ適用時にテンプレートを穴埋めした文字列と書き換え対象ファイルの内容が一致する場合には何もしないので、設定を変更した場合にのみnginxが設定を再読み込みすることになります。
 
-通知
----------------
+補足
+================
 
-http://docs.opscode.com/resource_common.html#notifications
+### subscribe
 
-nginxは、設定ファイルを書き換えた時に設定ファイルを再読み込みする必要があります。
-このã://docs.opscode.com/resource_common.html#notifications
+`notifies`と逆に指定したリソースが適用された場合にのみ自分自身を適用する`subscribe`という仕組みもあります
 
-nginub¯、設定ファイルを書き換えた時に設定ファãルを再読み込みする必要があります。
-このãに○○した時に☓☓するといった目的に使用
-ãな使い方で、これくらいの分量と内容なら全て`default.rb`にまとめてしªã¾えば良いでしょã¨て`default.rb`にまとめてしまえば良いでしょ¤ã
+### :delayedと:immediately
 
-レシピの属性
---------' まえば良いでしょゆ。
+デフォルトでは、通知内容をキューに入れて全レシピを適用し終わった後に通知先リソースを適用する`:delayed	`オプションが適用されています。すぐに実行したい場合は`:immediately`オプションを使用します。
 
-レシピの属性
---------' まえば良いでしょ〆。
+### action :nothing
 
-レシピの属性
--------
- m-epel`クックブックて依ånginx']['port'] = 80
+例えば、`service[nginx]`リソースが次のように記述されている場合、templateリソースの適用状態にかかわらず、`service[nginx]`リソースは`:start`アクションを実行してしまいます。
+
 ```
-
-この属性は、`node`、`le`や`environment`など`chefteepo`の様々な場所で指ã`
-
-通知
----------------
-
-http://docs.opscode.com/resource action :start
+service 'nginx' do
+  action :start
 end
 ```
 
