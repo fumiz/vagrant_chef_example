@@ -1,0 +1,2 @@
+CREATE DATABASE <%= node['wordpress']['mysql']['dbname'] %>;
+GRANT ALL ON <%= node['wordpress']['mysql']['dbname'] %>.* TO '<%= node['wordpress']['mysql']['user'] %>'@'localhost' IDENTIFIED BY '<%= node['wordpress']['mysql']['password'] %>';
