@@ -15,10 +15,3 @@ cookbook_file "#{ENV['HOME']}/.vimrc" do
   action :create
   source '.vimrc'
 end
-
-cookbook_file '/home/vagrant/.vimrc' do
-  action :create
-  source '.vimrc'
-  user 'vagrant'
-  group 'vagrant'
-end
